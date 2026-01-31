@@ -1,0 +1,39 @@
+/*<h1 id="title">Hello World</h1>
+<button onclick="change()">Change</button>
+<script>
+    var head = document.getElementById("title")
+    console.log(head.textContent)
+   
+    function change(){
+       head.textContent = "Bye World"
+    }
+</script>
+<h1 id="top">
+    Hello
+</h1>
+<script>
+    var title = document.getElementById("top") 
+    console.log(title.textContent)
+    title.textContent = "Hi"
+</script>*/
+ 
+<input id="num1" value="10">
+<input id="num2" value="54">
+<button onclick="output">Add</button>
+<p id="result">Result</p>
+<script>
+    var box1 = document.getElementById("num1")
+    var box2 = document.getElementById("num2")
+    var result = document.getElementById("result")
+
+    var box1value=Number(box1.value)
+    var box2value=Number(box2.value)
+
+    var total = box1value+box2value
+   
+
+    function output(){
+        result.textContent = total
+    }
+
+</script>
