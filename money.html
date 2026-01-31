@@ -1,0 +1,941 @@
+<!doctype html>
+<html lang="en" class="h-full">
+ <head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Money Manager</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="/_sdk/element_sdk.js"></script>
+  <script src="/_sdk/data_sdk.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&amp;display=swap" rel="stylesheet">
+  <style>
+    body {
+      box-sizing: border-box;
+      font-family: 'Plus Jakarta Sans', sans-serif;
+    }
+    .scrollbar-thin::-webkit-scrollbar {
+      width: 6px;
+    }
+    .scrollbar-thin::-webkit-scrollbar-track {
+      background: transparent;
+    }
+    .scrollbar-thin::-webkit-scrollbar-thumb {
+      background: #cbd5e1;
+      border-radius: 3px;
+    }
+    @keyframes slideIn {
+      from { opacity: 0; transform: translateY(-10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+    .animate-slide-in {
+      animation: slideIn 0.3s ease-out;
+    }
+    .animate-fade-in {
+      animation: fadeIn 0.2s ease-out;
+    }
+    .card-hover {
+      transition: all 0.2s ease;
+    }
+    .card-hover:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 25px -5px rgba(0, 0, 0, 0.1);
+    }
+  </style>
+  <style>@view-transition { navigation: auto; }</style>
+ </head>
+ <body class="h-full bg-slate-50">
+  <div id="app" class="h-full w-full overflow-auto"><!-- Main Container -->
+   <div class="min-h-full flex flex-col"><!-- Header -->
+    <header class="bg-gradient-to-r from-emerald-600 to-teal-600 text-white shadow-lg">
+     <div class="max-w-7xl mx-auto px-4 py-4 sm:px-6">
+      <div class="flex items-center justify-between">
+       <div class="flex items-center gap-3">
+        <div class="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center">
+         <svg class="w-6 h-6" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+         </svg>
+        </div>
+        <h1 id="app-title" class="text-xl sm:text-2xl font-bold">Money Manager</h1>
+       </div>
+       <div class="flex items-center gap-2"><button id="filter-btn" class="p-2 hover:bg-white/20 rounded-lg transition-colors" title="Filters">
+         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
+         </svg></button> <button id="add-transaction-btn" class="flex items-center gap-2 bg-white text-emerald-600 px-4 py-2 rounded-xl font-semibold hover:bg-emerald-50 transition-colors shadow-md">
+         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+         </svg><span class="hidden sm:inline">Add</span> </button>
+       </div>
+      </div>
+     </div>
+    </header><!-- Main Content -->
+    <main class="flex-1 max-w-7xl mx-auto w-full px-4 py-6 sm:px-6"><!-- Time Period Selector -->
+     <div class="flex flex-wrap items-center gap-3 mb-6"><select id="time-period" class="bg-white border border-slate-200 rounded-xl px-4 py-2.5 font-medium text-slate-700 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent shadow-sm"> <option value="daily">Daily</option> <option value="weekly">Weekly</option> <option value="monthly" selected>Monthly</option> <option value="yearly">Yearly</option> <option value="custom">Custom Range</option> </select>
+      <div id="custom-date-range" class="hidden flex-wrap items-center gap-2"><input type="date" id="start-date" class="bg-white border border-slate-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"> <span class="text-slate-400">to</span> <input type="date" id="end-date" class="bg-white border border-slate-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"> <button id="apply-date-range" class="bg-emerald-600 text-white px-4 py-2 rounded-xl text-sm font-medium hover:bg-emerald-700 transition-colors">Apply</button>
+      </div>
+     </div><!-- Dashboard Cards -->
+     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6"><!-- Total Balance -->
+      <div class="bg-gradient-to-br from-slate-800 to-slate-900 rounded-2xl p-5 text-white card-hover">
+       <div class="flex items-center justify-between mb-3"><span class="text-slate-400 text-sm font-medium">Total Balance</span>
+        <div class="w-8 h-8 bg-white/10 rounded-lg flex items-center justify-center">
+         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
+         </svg>
+        </div>
+       </div>
+       <p id="total-balance" class="text-2xl font-bold">$0.00</p>
+      </div><!-- Total Income -->
+      <div class="bg-white rounded-2xl p-5 shadow-sm border border-slate-100 card-hover">
+       <div class="flex items-center justify-between mb-3"><span class="text-slate-500 text-sm font-medium">Income</span>
+        <div class="w-8 h-8 bg-emerald-100 rounded-lg flex items-center justify-center">
+         <svg class="w-4 h-4 text-emerald-600" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 11l5-5m0 0l5 5m-5-5v12" />
+         </svg>
+        </div>
+       </div>
+       <p id="total-income" class="text-2xl font-bold text-slate-800">$0.00</p>
+      </div><!-- Total Expenses -->
+      <div class="bg-white rounded-2xl p-5 shadow-sm border border-slate-100 card-hover">
+       <div class="flex items-center justify-between mb-3"><span class="text-slate-500 text-sm font-medium">Expenses</span>
+        <div class="w-8 h-8 bg-rose-100 rounded-lg flex items-center justify-center">
+         <svg class="w-4 h-4 text-rose-600" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 13l-5 5m0 0l-5-5m5 5V6" />
+         </svg>
+        </div>
+       </div>
+       <p id="total-expenses" class="text-2xl font-bold text-slate-800">$0.00</p>
+      </div><!-- Transfers -->
+      <div class="bg-white rounded-2xl p-5 shadow-sm border border-slate-100 card-hover">
+       <div class="flex items-center justify-between mb-3"><span class="text-slate-500 text-sm font-medium">Transfers</span>
+        <div class="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
+         <svg class="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
+         </svg>
+        </div>
+       </div>
+       <p id="total-transfers" class="text-2xl font-bold text-slate-800">$0.00</p>
+      </div>
+     </div><!-- Category Summary & Account Balances -->
+     <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6"><!-- Category Summary -->
+      <div class="bg-white rounded-2xl p-5 shadow-sm border border-slate-100">
+       <h3 class="text-lg font-semibold text-slate-800 mb-4">Category Summary</h3>
+       <div id="category-summary" class="space-y-3 max-h-64 overflow-y-auto scrollbar-thin">
+        <p class="text-slate-400 text-sm text-center py-4">No transactions yet</p>
+       </div>
+      </div><!-- Account Balances -->
+      <div class="bg-white rounded-2xl p-5 shadow-sm border border-slate-100">
+       <h3 class="text-lg font-semibold text-slate-800 mb-4">Account Balances</h3>
+       <div id="account-balances" class="space-y-3 max-h-64 overflow-y-auto scrollbar-thin">
+        <p class="text-slate-400 text-sm text-center py-4">No accounts yet</p>
+       </div>
+      </div>
+     </div><!-- Transaction History -->
+     <div class="bg-white rounded-2xl shadow-sm border border-slate-100">
+      <div class="p-5 border-b border-slate-100">
+       <div class="flex items-center justify-between">
+        <h3 class="text-lg font-semibold text-slate-800">Transaction History</h3><span id="transaction-count" class="text-sm text-slate-500">0 transactions</span>
+       </div>
+      </div>
+      <div id="transaction-list" class="divide-y divide-slate-100 max-h-96 overflow-y-auto scrollbar-thin">
+       <div class="p-8 text-center">
+        <div class="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-3">
+         <svg class="w-8 h-8 text-slate-400" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+         </svg>
+        </div>
+        <p class="text-slate-500 font-medium">No transactions yet</p>
+        <p class="text-slate-400 text-sm mt-1">Click "Add" to create your first transaction</p>
+       </div>
+      </div>
+     </div>
+    </main>
+   </div><!-- Add Transaction Modal -->
+   <div id="add-modal" class="fixed inset-0 bg-black/50 hidden items-center justify-center z-50 p-4">
+    <div class="bg-white rounded-2xl w-full max-w-md max-h-[90%] overflow-hidden animate-slide-in">
+     <div class="flex items-center justify-between p-4 border-b border-slate-100">
+      <h2 class="text-lg font-semibold text-slate-800">Add Transaction</h2><button id="close-add-modal" class="p-2 hover:bg-slate-100 rounded-lg transition-colors">
+       <svg class="w-5 h-5 text-slate-500" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+       </svg></button>
+     </div><!-- Tabs -->
+     <div class="flex border-b border-slate-100"><button id="income-tab" class="flex-1 py-3 text-sm font-medium text-emerald-600 border-b-2 border-emerald-600 transition-colors">Income</button> <button id="expense-tab" class="flex-1 py-3 text-sm font-medium text-slate-500 hover:text-slate-700 transition-colors">Expense</button> <button id="transfer-tab" class="flex-1 py-3 text-sm font-medium text-slate-500 hover:text-slate-700 transition-colors">Transfer</button>
+     </div>
+     <form id="transaction-form" class="p-4 space-y-4 overflow-y-auto max-h-[60vh]"><input type="hidden" id="transaction-type" value="income"> <input type="hidden" id="edit-id" value="">
+      <div><label class="block text-sm font-medium text-slate-700 mb-1.5">Amount</label>
+       <div class="relative"><span id="currency-prefix" class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500">$</span> <input type="number" id="amount" step="0.01" min="0" required class="w-full pl-8 pr-4 py-2.5 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent" placeholder="0.00">
+       </div>
+      </div>
+      <div><label class="block text-sm font-medium text-slate-700 mb-1.5">Description</label> <input type="text" id="description" required class="w-full px-4 py-2.5 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent" placeholder="What's this for?">
+      </div>
+      <div id="category-field"><label class="block text-sm font-medium text-slate-700 mb-1.5">Category</label> <select id="category" required class="w-full px-4 py-2.5 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"> <option value="">Select category</option> <option value="salary">💰 Salary</option> <option value="freelance">💻 Freelance</option> <option value="investment">📈 Investment</option> <option value="gift">🎁 Gift</option> <option value="food">🍔 Food</option> <option value="fuel">⛽ Fuel</option> <option value="transport">🚗 Transport</option> <option value="shopping">🛍️ Shopping</option> <option value="entertainment">🎬 Entertainment</option> <option value="medical">🏥 Medical</option> <option value="bills">📄 Bills</option> <option value="loan">💳 Loan</option> <option value="rent">🏠 Rent</option> <option value="education">📚 Education</option> <option value="travel">✈️ Travel</option> <option value="other">📦 Other</option> </select>
+      </div>
+      <div id="division-field"><label class="block text-sm font-medium text-slate-700 mb-1.5">Division</label>
+       <div class="flex gap-3"><label class="flex-1 relative"> <input type="radio" name="division" value="personal" checked class="peer sr-only">
+         <div class="p-3 border border-slate-200 rounded-xl text-center cursor-pointer peer-checked:border-emerald-500 peer-checked:bg-emerald-50 transition-colors"><span class="text-lg">👤</span>
+          <p class="text-sm font-medium text-slate-700 mt-1">Personal</p>
+         </div></label> <label class="flex-1 relative"> <input type="radio" name="division" value="office" class="peer sr-only">
+         <div class="p-3 border border-slate-200 rounded-xl text-center cursor-pointer peer-checked:border-emerald-500 peer-checked:bg-emerald-50 transition-colors"><span class="text-lg">🏢</span>
+          <p class="text-sm font-medium text-slate-700 mt-1">Office</p>
+         </div></label>
+       </div>
+      </div>
+      <div id="account-field"><label class="block text-sm font-medium text-slate-700 mb-1.5">Account</label> <select id="from-account" required class="w-full px-4 py-2.5 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"> <option value="cash">💵 Cash</option> <option value="bank">🏦 Bank Account</option> <option value="credit">💳 Credit Card</option> <option value="savings">🏧 Savings</option> <option value="wallet">👛 Digital Wallet</option> </select>
+      </div>
+      <div id="to-account-field" class="hidden"><label class="block text-sm font-medium text-slate-700 mb-1.5">To Account</label> <select id="to-account" class="w-full px-4 py-2.5 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"> <option value="cash">💵 Cash</option> <option value="bank">🏦 Bank Account</option> <option value="credit">💳 Credit Card</option> <option value="savings">🏧 Savings</option> <option value="wallet">👛 Digital Wallet</option> </select>
+      </div>
+      <div><label class="block text-sm font-medium text-slate-700 mb-1.5">Date &amp; Time</label> <input type="datetime-local" id="datetime" required class="w-full px-4 py-2.5 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent">
+      </div><button type="submit" id="submit-btn" class="w-full bg-emerald-600 text-white py-3 rounded-xl font-semibold hover:bg-emerald-700 transition-colors flex items-center justify-center gap-2">
+       <svg class="w-5 h-5" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+       </svg><span>Add Income</span> </button>
+     </form>
+    </div>
+   </div><!-- Filter Modal -->
+   <div id="filter-modal" class="fixed inset-0 bg-black/50 hidden items-center justify-center z-50 p-4">
+    <div class="bg-white rounded-2xl w-full max-w-md animate-slide-in">
+     <div class="flex items-center justify-between p-4 border-b border-slate-100">
+      <h2 class="text-lg font-semibold text-slate-800">Filters</h2><button id="close-filter-modal" class="p-2 hover:bg-slate-100 rounded-lg transition-colors">
+       <svg class="w-5 h-5 text-slate-500" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+       </svg></button>
+     </div>
+     <div class="p-4 space-y-4">
+      <div><label class="block text-sm font-medium text-slate-700 mb-1.5">Type</label> <select id="filter-type" class="w-full px-4 py-2.5 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"> <option value="all">All Types</option> <option value="income">Income Only</option> <option value="expense">Expenses Only</option> <option value="transfer">Transfers Only</option> </select>
+      </div>
+      <div><label class="block text-sm font-medium text-slate-700 mb-1.5">Division</label> <select id="filter-division" class="w-full px-4 py-2.5 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"> <option value="all">All Divisions</option> <option value="personal">Personal</option> <option value="office">Office</option> </select>
+      </div>
+      <div><label class="block text-sm font-medium text-slate-700 mb-1.5">Category</label> <select id="filter-category" class="w-full px-4 py-2.5 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"> <option value="all">All Categories</option> <option value="salary">💰 Salary</option> <option value="freelance">💻 Freelance</option> <option value="investment">📈 Investment</option> <option value="gift">🎁 Gift</option> <option value="food">🍔 Food</option> <option value="fuel">⛽ Fuel</option> <option value="transport">🚗 Transport</option> <option value="shopping">🛍️ Shopping</option> <option value="entertainment">🎬 Entertainment</option> <option value="medical">🏥 Medical</option> <option value="bills">📄 Bills</option> <option value="loan">💳 Loan</option> <option value="rent">🏠 Rent</option> <option value="education">📚 Education</option> <option value="travel">✈️ Travel</option> <option value="other">📦 Other</option> </select>
+      </div>
+      <div><label class="block text-sm font-medium text-slate-700 mb-1.5">Account</label> <select id="filter-account" class="w-full px-4 py-2.5 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"> <option value="all">All Accounts</option> <option value="cash">💵 Cash</option> <option value="bank">🏦 Bank Account</option> <option value="credit">💳 Credit Card</option> <option value="savings">🏧 Savings</option> <option value="wallet">👛 Digital Wallet</option> </select>
+      </div>
+      <div class="flex gap-3 pt-2"><button id="clear-filters" class="flex-1 py-2.5 border border-slate-200 rounded-xl font-medium text-slate-700 hover:bg-slate-50 transition-colors">Clear All</button> <button id="apply-filters" class="flex-1 py-2.5 bg-emerald-600 text-white rounded-xl font-medium hover:bg-emerald-700 transition-colors">Apply Filters</button>
+      </div>
+     </div>
+    </div>
+   </div><!-- Edit Confirmation Modal -->
+   <div id="edit-restricted-modal" class="fixed inset-0 bg-black/50 hidden items-center justify-center z-50 p-4">
+    <div class="bg-white rounded-2xl w-full max-w-sm animate-slide-in p-6 text-center">
+     <div class="w-16 h-16 bg-amber-100 rounded-full flex items-center justify-center mx-auto mb-4">
+      <svg class="w-8 h-8 text-amber-600" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+      </svg>
+     </div>
+     <h3 class="text-lg font-semibold text-slate-800 mb-2">Edit Restricted</h3>
+     <p class="text-slate-500 text-sm mb-4">This transaction was created more than 12 hours ago and can no longer be edited.</p><button id="close-edit-restricted" class="w-full py-2.5 bg-slate-800 text-white rounded-xl font-medium hover:bg-slate-900 transition-colors">Understood</button>
+    </div>
+   </div><!-- Delete Confirmation Modal -->
+   <div id="delete-modal" class="fixed inset-0 bg-black/50 hidden items-center justify-center z-50 p-4">
+    <div class="bg-white rounded-2xl w-full max-w-sm animate-slide-in p-6 text-center">
+     <div class="w-16 h-16 bg-rose-100 rounded-full flex items-center justify-center mx-auto mb-4">
+      <svg class="w-8 h-8 text-rose-600" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+      </svg>
+     </div>
+     <h3 class="text-lg font-semibold text-slate-800 mb-2">Delete Transaction?</h3>
+     <p class="text-slate-500 text-sm mb-4">This action cannot be undone.</p><input type="hidden" id="delete-id" value="">
+     <div class="flex gap-3"><button id="cancel-delete" class="flex-1 py-2.5 border border-slate-200 rounded-xl font-medium text-slate-700 hover:bg-slate-50 transition-colors">Cancel</button> <button id="confirm-delete" class="flex-1 py-2.5 bg-rose-600 text-white rounded-xl font-medium hover:bg-rose-700 transition-colors">Delete</button>
+     </div>
+    </div>
+   </div><!-- Toast Container -->
+   <div id="toast-container" class="fixed bottom-4 right-4 z-50 space-y-2"></div>
+  </div>
+  <script>
+    // Default configuration
+    const defaultConfig = {
+      app_title: 'Money Manager',
+      currency_symbol: '$',
+      background_color: '#f8fafc',
+      surface_color: '#ffffff',
+      text_color: '#1e293b',
+      primary_action_color: '#059669',
+      secondary_action_color: '#64748b'
+    };
+
+    let config = { ...defaultConfig };
+    let allTransactions = [];
+    let filteredTransactions = [];
+    let currentFilters = {
+      type: 'all',
+      division: 'all',
+      category: 'all',
+      account: 'all',
+      startDate: null,
+      endDate: null,
+      timePeriod: 'monthly'
+    };
+
+    // Category icons mapping
+    const categoryIcons = {
+      salary: '💰',
+      freelance: '💻',
+      investment: '📈',
+      gift: '🎁',
+      food: '🍔',
+      fuel: '⛽',
+      transport: '🚗',
+      shopping: '🛍️',
+      entertainment: '🎬',
+      medical: '🏥',
+      bills: '📄',
+      loan: '💳',
+      rent: '🏠',
+      education: '📚',
+      travel: '✈️',
+      other: '📦'
+    };
+
+    const accountIcons = {
+      cash: '💵',
+      bank: '🏦',
+      credit: '💳',
+      savings: '🏧',
+      wallet: '👛'
+    };
+
+    // Toast notification
+    function showToast(message, type = 'success') {
+      const container = document.getElementById('toast-container');
+      const toast = document.createElement('div');
+      toast.className = `px-4 py-3 rounded-xl shadow-lg animate-slide-in flex items-center gap-2 ${
+        type === 'success' ? 'bg-emerald-600 text-white' : 
+        type === 'error' ? 'bg-rose-600 text-white' : 'bg-slate-800 text-white'
+      }`;
+      toast.innerHTML = `
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          ${type === 'success' ? '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>' :
+            type === 'error' ? '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>' :
+            '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>'}
+        </svg>
+        <span class="font-medium">${message}</span>
+      `;
+      container.appendChild(toast);
+      setTimeout(() => toast.remove(), 3000);
+    }
+
+    // Format currency
+    function formatCurrency(amount) {
+      return `${config.currency_symbol}${Math.abs(amount).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+    }
+
+    // Format date
+    function formatDate(dateStr) {
+      const date = new Date(dateStr);
+      return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+    }
+
+    function formatTime(dateStr) {
+      const date = new Date(dateStr);
+      return date.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
+    }
+
+    // Check if transaction can be edited (within 12 hours)
+    function canEdit(createdAt) {
+      const created = new Date(createdAt);
+      const now = new Date();
+      const hoursDiff = (now - created) / (1000 * 60 * 60);
+      return hoursDiff <= 12;
+    }
+
+    // Get date range based on time period
+    function getDateRange(period) {
+      const now = new Date();
+      let start, end;
+      
+      switch(period) {
+        case 'daily':
+          start = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+          end = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59);
+          break;
+        case 'weekly':
+          const dayOfWeek = now.getDay();
+          start = new Date(now.getFullYear(), now.getMonth(), now.getDate() - dayOfWeek);
+          end = new Date(now.getFullYear(), now.getMonth(), now.getDate() + (6 - dayOfWeek), 23, 59, 59);
+          break;
+        case 'monthly':
+          start = new Date(now.getFullYear(), now.getMonth(), 1);
+          end = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59);
+          break;
+        case 'yearly':
+          start = new Date(now.getFullYear(), 0, 1);
+          end = new Date(now.getFullYear(), 11, 31, 23, 59, 59);
+          break;
+        default:
+          return { start: null, end: null };
+      }
+      
+      return { start, end };
+    }
+
+    // Filter transactions
+    function filterTransactions() {
+      let filtered = [...allTransactions];
+      
+      // Time period filter
+      if (currentFilters.timePeriod !== 'custom') {
+        const { start, end } = getDateRange(currentFilters.timePeriod);
+        if (start && end) {
+          filtered = filtered.filter(t => {
+            const date = new Date(t.date);
+            return date >= start && date <= end;
+          });
+        }
+      } else if (currentFilters.startDate && currentFilters.endDate) {
+        const start = new Date(currentFilters.startDate);
+        const end = new Date(currentFilters.endDate);
+        end.setHours(23, 59, 59);
+        filtered = filtered.filter(t => {
+          const date = new Date(t.date);
+          return date >= start && date <= end;
+        });
+      }
+      
+      // Type filter
+      if (currentFilters.type !== 'all') {
+        filtered = filtered.filter(t => t.type === currentFilters.type);
+      }
+      
+      // Division filter
+      if (currentFilters.division !== 'all') {
+        filtered = filtered.filter(t => t.division === currentFilters.division);
+      }
+      
+      // Category filter
+      if (currentFilters.category !== 'all') {
+        filtered = filtered.filter(t => t.category === currentFilters.category);
+      }
+      
+      // Account filter
+      if (currentFilters.account !== 'all') {
+        filtered = filtered.filter(t => t.fromAccount === currentFilters.account || t.toAccount === currentFilters.account);
+      }
+      
+      // Sort by date descending
+      filtered.sort((a, b) => new Date(b.date) - new Date(a.date));
+      
+      filteredTransactions = filtered;
+      return filtered;
+    }
+
+    // Calculate totals
+    function calculateTotals(transactions) {
+      let income = 0;
+      let expenses = 0;
+      let transfers = 0;
+      
+      transactions.forEach(t => {
+        if (t.isTransfer) {
+          transfers += t.amount;
+        } else if (t.type === 'income') {
+          income += t.amount;
+        } else {
+          expenses += t.amount;
+        }
+      });
+      
+      return { income, expenses, transfers, balance: income - expenses };
+    }
+
+    // Calculate account balances
+    function calculateAccountBalances() {
+      const balances = {};
+      
+      allTransactions.forEach(t => {
+        if (t.isTransfer) {
+          balances[t.fromAccount] = (balances[t.fromAccount] || 0) - t.amount;
+          balances[t.toAccount] = (balances[t.toAccount] || 0) + t.amount;
+        } else if (t.type === 'income') {
+          balances[t.fromAccount] = (balances[t.fromAccount] || 0) + t.amount;
+        } else {
+          balances[t.fromAccount] = (balances[t.fromAccount] || 0) - t.amount;
+        }
+      });
+      
+      return balances;
+    }
+
+    // Calculate category summary
+    function calculateCategorySummary(transactions) {
+      const summary = {};
+      
+      transactions.forEach(t => {
+        if (!t.isTransfer && t.category) {
+          if (!summary[t.category]) {
+            summary[t.category] = { income: 0, expense: 0 };
+          }
+          if (t.type === 'income') {
+            summary[t.category].income += t.amount;
+          } else {
+            summary[t.category].expense += t.amount;
+          }
+        }
+      });
+      
+      return summary;
+    }
+
+    // Render dashboard
+    function renderDashboard() {
+      const filtered = filterTransactions();
+      const totals = calculateTotals(filtered);
+      
+      document.getElementById('total-balance').textContent = formatCurrency(totals.balance);
+      document.getElementById('total-income').textContent = formatCurrency(totals.income);
+      document.getElementById('total-expenses').textContent = formatCurrency(totals.expenses);
+      document.getElementById('total-transfers').textContent = formatCurrency(totals.transfers);
+      document.getElementById('transaction-count').textContent = `${filtered.length} transaction${filtered.length !== 1 ? 's' : ''}`;
+      
+      renderCategorySummary(filtered);
+      renderAccountBalances();
+      renderTransactionList(filtered);
+    }
+
+    // Render category summary
+    function renderCategorySummary(transactions) {
+      const container = document.getElementById('category-summary');
+      const summary = calculateCategorySummary(transactions);
+      const categories = Object.entries(summary);
+      
+      if (categories.length === 0) {
+        container.innerHTML = '<p class="text-slate-400 text-sm text-center py-4">No transactions yet</p>';
+        return;
+      }
+      
+      container.innerHTML = categories.map(([category, amounts]) => {
+        const total = amounts.income - amounts.expense;
+        const percentage = Math.round((amounts.expense / (calculateTotals(transactions).expenses || 1)) * 100);
+        
+        return `
+          <div class="flex items-center gap-3 p-2 rounded-lg hover:bg-slate-50 transition-colors">
+            <span class="text-xl">${categoryIcons[category] || '📦'}</span>
+            <div class="flex-1 min-w-0">
+              <p class="font-medium text-slate-700 capitalize truncate">${category}</p>
+              <div class="w-full bg-slate-100 rounded-full h-1.5 mt-1">
+                <div class="bg-emerald-500 h-1.5 rounded-full transition-all" style="width: ${Math.min(percentage, 100)}%"></div>
+              </div>
+            </div>
+            <span class="${total >= 0 ? 'text-emerald-600' : 'text-rose-600'} font-semibold text-sm">${formatCurrency(Math.abs(total))}</span>
+          </div>
+        `;
+      }).join('');
+    }
+
+    // Render account balances
+    function renderAccountBalances() {
+      const container = document.getElementById('account-balances');
+      const balances = calculateAccountBalances();
+      const accounts = Object.entries(balances);
+      
+      if (accounts.length === 0) {
+        container.innerHTML = '<p class="text-slate-400 text-sm text-center py-4">No accounts yet</p>';
+        return;
+      }
+      
+      container.innerHTML = accounts.map(([account, balance]) => `
+        <div class="flex items-center justify-between p-3 bg-slate-50 rounded-xl">
+          <div class="flex items-center gap-3">
+            <span class="text-xl">${accountIcons[account] || '💰'}</span>
+            <span class="font-medium text-slate-700 capitalize">${account}</span>
+          </div>
+          <span class="${balance >= 0 ? 'text-emerald-600' : 'text-rose-600'} font-bold">${formatCurrency(balance)}</span>
+        </div>
+      `).join('');
+    }
+
+    // Render transaction list
+    function renderTransactionList(transactions) {
+      const container = document.getElementById('transaction-list');
+      
+      if (transactions.length === 0) {
+        container.innerHTML = `
+          <div class="p-8 text-center">
+            <div class="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-3">
+              <svg class="w-8 h-8 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
+              </svg>
+            </div>
+            <p class="text-slate-500 font-medium">No transactions found</p>
+            <p class="text-slate-400 text-sm mt-1">Try adjusting your filters or add a new transaction</p>
+          </div>
+        `;
+        return;
+      }
+      
+      container.innerHTML = transactions.map(t => {
+        const isEditable = canEdit(t.createdAt);
+        const icon = t.isTransfer ? '↔️' : categoryIcons[t.category] || '📦';
+        const typeColor = t.isTransfer ? 'text-blue-600' : t.type === 'income' ? 'text-emerald-600' : 'text-rose-600';
+        const typeBg = t.isTransfer ? 'bg-blue-50' : t.type === 'income' ? 'bg-emerald-50' : 'bg-rose-50';
+        const sign = t.type === 'income' && !t.isTransfer ? '+' : t.type === 'expense' ? '-' : '';
+        
+        return `
+          <div class="p-4 hover:bg-slate-50 transition-colors group" data-id="${t.__backendId}">
+            <div class="flex items-start gap-3">
+              <div class="w-10 h-10 ${typeBg} rounded-xl flex items-center justify-center flex-shrink-0">
+                <span class="text-lg">${icon}</span>
+              </div>
+              <div class="flex-1 min-w-0">
+                <div class="flex items-start justify-between gap-2">
+                  <div class="min-w-0">
+                    <p class="font-medium text-slate-800 truncate">${t.description}</p>
+                    <p class="text-xs text-slate-400 mt-0.5">
+                      ${t.isTransfer ? `${accountIcons[t.fromAccount] || ''} ${t.fromAccount} → ${accountIcons[t.toAccount] || ''} ${t.toAccount}` : 
+                        `${t.category ? `<span class="capitalize">${t.category}</span> • ` : ''}${accountIcons[t.fromAccount] || ''} ${t.fromAccount} • ${t.division === 'office' ? '🏢 Office' : '👤 Personal'}`}
+                    </p>
+                  </div>
+                  <div class="text-right flex-shrink-0">
+                    <p class="${typeColor} font-bold">${sign}${formatCurrency(t.amount)}</p>
+                    <p class="text-xs text-slate-400 mt-0.5">${formatDate(t.date)}</p>
+                  </div>
+                </div>
+                <div class="flex items-center gap-2 mt-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                  <button onclick="editTransaction('${t.__backendId}')" class="text-xs px-2 py-1 rounded-lg ${isEditable ? 'bg-slate-100 text-slate-600 hover:bg-slate-200' : 'bg-slate-50 text-slate-400 cursor-not-allowed'} transition-colors flex items-center gap-1">
+                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+                    </svg>
+                    Edit
+                  </button>
+                  <button onclick="confirmDelete('${t.__backendId}')" class="text-xs px-2 py-1 rounded-lg bg-rose-50 text-rose-600 hover:bg-rose-100 transition-colors flex items-center gap-1">
+                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                    </svg>
+                    Delete
+                  </button>
+                  ${!isEditable ? '<span class="text-xs text-amber-600">⏱️ Edit locked (>12h)</span>' : ''}
+                </div>
+              </div>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    // Edit transaction
+    function editTransaction(id) {
+      const transaction = allTransactions.find(t => t.__backendId === id);
+      if (!transaction) return;
+      
+      if (!canEdit(transaction.createdAt)) {
+        document.getElementById('edit-restricted-modal').style.display = 'flex';
+        return;
+      }
+      
+      // Populate form
+      document.getElementById('edit-id').value = id;
+      document.getElementById('amount').value = transaction.amount;
+      document.getElementById('description').value = transaction.description;
+      document.getElementById('category').value = transaction.category || '';
+      document.getElementById('from-account').value = transaction.fromAccount || 'cash';
+      document.getElementById('to-account').value = transaction.toAccount || 'cash';
+      document.getElementById('transaction-type').value = transaction.isTransfer ? 'transfer' : transaction.type;
+      
+      // Set division
+      const divisionRadios = document.querySelectorAll('input[name="division"]');
+      divisionRadios.forEach(radio => {
+        radio.checked = radio.value === transaction.division;
+      });
+      
+      // Set datetime
+      const date = new Date(transaction.date);
+      const localDatetime = new Date(date.getTime() - date.getTimezoneOffset() * 60000).toISOString().slice(0, 16);
+      document.getElementById('datetime').value = localDatetime;
+      
+      // Set tab
+      if (transaction.isTransfer) {
+        switchTab('transfer');
+      } else {
+        switchTab(transaction.type);
+      }
+      
+      // Update button text
+      document.getElementById('submit-btn').querySelector('span').textContent = 'Update Transaction';
+      
+      document.getElementById('add-modal').style.display = 'flex';
+    }
+
+    // Confirm delete
+    function confirmDelete(id) {
+      document.getElementById('delete-id').value = id;
+      document.getElementById('delete-modal').style.display = 'flex';
+    }
+
+    // Delete transaction
+    async function deleteTransaction() {
+      const id = document.getElementById('delete-id').value;
+      const transaction = allTransactions.find(t => t.__backendId === id);
+      if (!transaction) return;
+      
+      const deleteBtn = document.getElementById('confirm-delete');
+      deleteBtn.disabled = true;
+      deleteBtn.innerHTML = '<svg class="w-5 h-5 animate-spin" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>';
+      
+      const result = await window.dataSdk.delete(transaction);
+      
+      deleteBtn.disabled = false;
+      deleteBtn.innerHTML = 'Delete';
+      
+      if (result.isOk) {
+        document.getElementById('delete-modal').style.display = 'none';
+        showToast('Transaction deleted');
+      } else {
+        showToast('Failed to delete transaction', 'error');
+      }
+    }
+
+    // Switch tab
+    function switchTab(type) {
+      const incomeTab = document.getElementById('income-tab');
+      const expenseTab = document.getElementById('expense-tab');
+      const transferTab = document.getElementById('transfer-tab');
+      const submitBtn = document.getElementById('submit-btn');
+      const categoryField = document.getElementById('category-field');
+      const divisionField = document.getElementById('division-field');
+      const toAccountField = document.getElementById('to-account-field');
+      const accountLabel = document.querySelector('#account-field label');
+      
+      incomeTab.className = 'flex-1 py-3 text-sm font-medium transition-colors ' + (type === 'income' ? 'text-emerald-600 border-b-2 border-emerald-600' : 'text-slate-500 hover:text-slate-700');
+      expenseTab.className = 'flex-1 py-3 text-sm font-medium transition-colors ' + (type === 'expense' ? 'text-rose-600 border-b-2 border-rose-600' : 'text-slate-500 hover:text-slate-700');
+      transferTab.className = 'flex-1 py-3 text-sm font-medium transition-colors ' + (type === 'transfer' ? 'text-blue-600 border-b-2 border-blue-600' : 'text-slate-500 hover:text-slate-700');
+      
+      document.getElementById('transaction-type').value = type;
+      
+      const isEdit = document.getElementById('edit-id').value !== '';
+      const buttonText = isEdit ? 'Update Transaction' : type === 'income' ? 'Add Income' : type === 'expense' ? 'Add Expense' : 'Add Transfer';
+      
+      if (type === 'transfer') {
+        categoryField.classList.add('hidden');
+        divisionField.classList.add('hidden');
+        toAccountField.classList.remove('hidden');
+        accountLabel.textContent = 'From Account';
+        document.getElementById('category').required = false;
+        submitBtn.className = 'w-full bg-blue-600 text-white py-3 rounded-xl font-semibold hover:bg-blue-700 transition-colors flex items-center justify-center gap-2';
+      } else {
+        categoryField.classList.remove('hidden');
+        divisionField.classList.remove('hidden');
+        toAccountField.classList.add('hidden');
+        accountLabel.textContent = 'Account';
+        document.getElementById('category').required = true;
+        submitBtn.className = `w-full ${type === 'income' ? 'bg-emerald-600 hover:bg-emerald-700' : 'bg-rose-600 hover:bg-rose-700'} text-white py-3 rounded-xl font-semibold transition-colors flex items-center justify-center gap-2`;
+      }
+      
+      submitBtn.querySelector('span').textContent = buttonText;
+    }
+
+    // Reset form
+    function resetForm() {
+      document.getElementById('transaction-form').reset();
+      document.getElementById('edit-id').value = '';
+      document.getElementById('transaction-type').value = 'income';
+      const now = new Date();
+      const localDatetime = new Date(now.getTime() - now.getTimezoneOffset() * 60000).toISOString().slice(0, 16);
+      document.getElementById('datetime').value = localDatetime;
+      switchTab('income');
+    }
+
+    // Apply config
+    function applyConfig() {
+      document.getElementById('app-title').textContent = config.app_title || defaultConfig.app_title;
+      document.getElementById('currency-prefix').textContent = config.currency_symbol || defaultConfig.currency_symbol;
+      renderDashboard();
+    }
+
+    // Data handler
+    const dataHandler = {
+      onDataChanged(data) {
+        allTransactions = data;
+        renderDashboard();
+      }
+    };
+
+    // Initialize
+    async function init() {
+      // Initialize Element SDK
+      if (window.elementSdk) {
+        window.elementSdk.init({
+          defaultConfig,
+          async onConfigChange(newConfig) {
+            config = { ...defaultConfig, ...newConfig };
+            applyConfig();
+          },
+          mapToCapabilities(cfg) {
+            return {
+              recolorables: [
+                {
+                  get: () => cfg.background_color || defaultConfig.background_color,
+                  set: (v) => window.elementSdk.setConfig({ background_color: v })
+                },
+                {
+                  get: () => cfg.surface_color || defaultConfig.surface_color,
+                  set: (v) => window.elementSdk.setConfig({ surface_color: v })
+                },
+                {
+                  get: () => cfg.text_color || defaultConfig.text_color,
+                  set: (v) => window.elementSdk.setConfig({ text_color: v })
+                },
+                {
+                  get: () => cfg.primary_action_color || defaultConfig.primary_action_color,
+                  set: (v) => window.elementSdk.setConfig({ primary_action_color: v })
+                },
+                {
+                  get: () => cfg.secondary_action_color || defaultConfig.secondary_action_color,
+                  set: (v) => window.elementSdk.setConfig({ secondary_action_color: v })
+                }
+              ],
+              borderables: [],
+              fontEditable: undefined,
+              fontSizeable: undefined
+            };
+          },
+          mapToEditPanelValues(cfg) {
+            return new Map([
+              ['app_title', cfg.app_title || defaultConfig.app_title],
+              ['currency_symbol', cfg.currency_symbol || defaultConfig.currency_symbol]
+            ]);
+          }
+        });
+      }
+
+      // Initialize Data SDK
+      if (window.dataSdk) {
+        const result = await window.dataSdk.init(dataHandler);
+        if (!result.isOk) {
+          console.error('Failed to initialize Data SDK');
+        }
+      }
+
+      // Set default datetime
+      const now = new Date();
+      const localDatetime = new Date(now.getTime() - now.getTimezoneOffset() * 60000).toISOString().slice(0, 16);
+      document.getElementById('datetime').value = localDatetime;
+
+      // Event listeners
+      document.getElementById('add-transaction-btn').addEventListener('click', () => {
+        resetForm();
+        document.getElementById('add-modal').style.display = 'flex';
+      });
+
+      document.getElementById('close-add-modal').addEventListener('click', () => {
+        document.getElementById('add-modal').style.display = 'none';
+      });
+
+      document.getElementById('income-tab').addEventListener('click', () => switchTab('income'));
+      document.getElementById('expense-tab').addEventListener('click', () => switchTab('expense'));
+      document.getElementById('transfer-tab').addEventListener('click', () => switchTab('transfer'));
+
+      // Form submission
+      document.getElementById('transaction-form').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        
+        if (allTransactions.length >= 999) {
+          showToast('Maximum limit of 999 transactions reached', 'error');
+          return;
+        }
+        
+        const submitBtn = document.getElementById('submit-btn');
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<svg class="w-5 h-5 animate-spin" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>';
+        
+        const editId = document.getElementById('edit-id').value;
+        const type = document.getElementById('transaction-type').value;
+        const isTransfer = type === 'transfer';
+        const division = document.querySelector('input[name="division"]:checked')?.value || 'personal';
+        
+        const transactionData = {
+          id: editId || Date.now().toString(),
+          type: isTransfer ? 'transfer' : type,
+          amount: parseFloat(document.getElementById('amount').value),
+          description: document.getElementById('description').value,
+          category: isTransfer ? '' : document.getElementById('category').value,
+          division: isTransfer ? 'personal' : division,
+          date: new Date(document.getElementById('datetime').value).toISOString(),
+          createdAt: editId ? allTransactions.find(t => t.__backendId === editId)?.createdAt : new Date().toISOString(),
+          fromAccount: document.getElementById('from-account').value,
+          toAccount: isTransfer ? document.getElementById('to-account').value : '',
+          isTransfer
+        };
+        
+        let result;
+        if (editId) {
+          const existing = allTransactions.find(t => t.__backendId === editId);
+          if (existing) {
+            result = await window.dataSdk.update({ ...existing, ...transactionData });
+          }
+        } else {
+          result = await window.dataSdk.create(transactionData);
+        }
+        
+        submitBtn.disabled = false;
+        switchTab(type);
+        
+        if (result && result.isOk) {
+          document.getElementById('add-modal').style.display = 'none';
+          showToast(editId ? 'Transaction updated' : 'Transaction added');
+          resetForm();
+        } else {
+          showToast('Failed to save transaction', 'error');
+        }
+      });
+
+      // Time period change
+      document.getElementById('time-period').addEventListener('change', (e) => {
+        currentFilters.timePeriod = e.target.value;
+        if (e.target.value === 'custom') {
+          document.getElementById('custom-date-range').classList.remove('hidden');
+          document.getElementById('custom-date-range').classList.add('flex');
+        } else {
+          document.getElementById('custom-date-range').classList.add('hidden');
+          document.getElementById('custom-date-range').classList.remove('flex');
+          renderDashboard();
+        }
+      });
+
+      document.getElementById('apply-date-range').addEventListener('click', () => {
+        currentFilters.startDate = document.getElementById('start-date').value;
+        currentFilters.endDate = document.getElementById('end-date').value;
+        renderDashboard();
+      });
+
+      // Filter modal
+      document.getElementById('filter-btn').addEventListener('click', () => {
+        document.getElementById('filter-modal').style.display = 'flex';
+      });
+
+      document.getElementById('close-filter-modal').addEventListener('click', () => {
+        document.getElementById('filter-modal').style.display = 'none';
+      });
+
+      document.getElementById('apply-filters').addEventListener('click', () => {
+        currentFilters.type = document.getElementById('filter-type').value;
+        currentFilters.division = document.getElementById('filter-division').value;
+        currentFilters.category = document.getElementById('filter-category').value;
+        currentFilters.account = document.getElementById('filter-account').value;
+        document.getElementById('filter-modal').style.display = 'none';
+        renderDashboard();
+      });
+
+      document.getElementById('clear-filters').addEventListener('click', () => {
+        document.getElementById('filter-type').value = 'all';
+        document.getElementById('filter-division').value = 'all';
+        document.getElementById('filter-category').value = 'all';
+        document.getElementById('filter-account').value = 'all';
+        currentFilters = { ...currentFilters, type: 'all', division: 'all', category: 'all', account: 'all' };
+        document.getElementById('filter-modal').style.display = 'none';
+        renderDashboard();
+      });
+
+      // Delete modal
+      document.getElementById('confirm-delete').addEventListener('click', deleteTransaction);
+      document.getElementById('cancel-delete').addEventListener('click', () => {
+        document.getElementById('delete-modal').style.display = 'none';
+      });
+
+      // Edit restricted modal
+      document.getElementById('close-edit-restricted').addEventListener('click', () => {
+        document.getElementById('edit-restricted-modal').style.display = 'none';
+      });
+
+      // Close modals on backdrop click
+      ['add-modal', 'filter-modal', 'delete-modal', 'edit-restricted-modal'].forEach(id => {
+        document.getElementById(id).addEventListener('click', (e) => {
+          if (e.target.id === id) {
+            document.getElementById(id).style.display = 'none';
+          }
+        });
+      });
+
+      applyConfig();
+    }
+
+    init();
+  </script>
+ <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'9c660ba754ac79f2',t:'MTc2OTgyOTMzNi4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</html>
